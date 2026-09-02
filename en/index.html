@@ -26,6 +26,20 @@
   .secondary { background:#FBF5EE; color:#2D3436; border:1.5px solid rgba(229,112,80,0.15); }
   .section { font-size:12.5px; font-weight:700; color:#E57050; letter-spacing:0.08em;
     margin:26px 0 2px; text-transform:uppercase; }
+
+  /* Store badges. A centered ROW rather than the full-width rows the rest
+     of this column uses: the badges are fixed-aspect official artwork and
+     must not be stretched. Platform ordering is set by the script below —
+     nearly everyone lands here from an Instagram bio link on a phone, so
+     the store they can actually install from goes first. */
+  .stores { display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap; }
+  .stores a { display:inline-flex; line-height:0; border-radius:8px; transition:transform .1s; }
+  .stores a:active { transform:scale(0.97); }
+  .stores img { height:52px; width:auto; display:block; }
+  .stores.ios-first .s-ios { order:0; }
+  .stores.ios-first .s-play { order:1; }
+  .stores .s-other { opacity:0.72; }
+  .stores .s-other img { height:44px; }
   footer { margin-top:auto; padding-top:36px; font-size:12.5px; color:#8a9498; text-align:center; line-height:1.6; }
 </style>
 </head>
@@ -35,13 +49,35 @@
   <div class="tag">The journal app that listens to your baby<br>It keeps the babbles you missed — hear them again anytime</div>
 
   <div class="links">
-    <a class="btn primary" href="https://play.google.com/store/apps/details?id=io.solivie.speech&hl=en">📲 Download on Google Play</a>
-    <a class="btn primary" href="https://apps.apple.com/app/id6761690196">📲 Download on the App Store</a>
+    <div class="stores">
+      <a class="s-play" href="https://play.google.com/store/apps/details?id=io.solivie.speech&hl=en" aria-label="Get it on Google Play">
+        <img src="../badges/play-en.png" alt="Get it on Google Play" width="564" height="168">
+      </a>
+      <a class="s-ios" href="https://apps.apple.com/app/id6761690196" aria-label="Download on the App Store">
+        <img src="../badges/apple-en-us.svg" alt="Download on the App Store" width="120" height="40">
+      </a>
+    </div>
 
     <div class="section">Instagram</div>
     <a class="btn secondary" href="https://www.instagram.com/babble.diary/">@babble.diary — Baby Talk &amp; Myths T/F</a>
   </div>
 
   <footer>Babble Diary · Solivie<br>Your baby's first sounds, kept for the family</footer>
+
+<script>
+  (function () {
+    var ua = navigator.userAgent;
+    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var isAndroid = /Android/i.test(ua);
+    var row = document.querySelector(".stores");
+    if (!row || (!isIOS && !isAndroid)) return;   // desktop keeps both equal
+    row.classList.toggle("ios-first", isIOS);
+    // De-emphasise the store this device cannot install from, without
+    // hiding it — a shared link still has to work on the other platform.
+    var other = row.querySelector(isIOS ? ".s-play" : ".s-ios");
+    if (other) other.classList.add("s-other");
+  })();
+</script>
 </body>
 </html>

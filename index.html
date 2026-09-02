@@ -26,6 +26,20 @@
   .secondary { background:#FBF5EE; color:#2D3436; border:1.5px solid rgba(229,112,80,0.15); }
   .section { font-size:12.5px; font-weight:700; color:#E57050; letter-spacing:0.08em;
     margin:26px 0 2px; text-transform:uppercase; }
+
+  /* Store badges. A centered ROW rather than the full-width rows the rest
+     of this column uses: the badges are fixed-aspect official artwork and
+     must not be stretched. Platform ordering is set by the script below —
+     nearly everyone lands here from an Instagram bio link on a phone, so
+     the store they can actually install from goes first. */
+  .stores { display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap; }
+  .stores a { display:inline-flex; line-height:0; border-radius:8px; transition:transform .1s; }
+  .stores a:active { transform:scale(0.97); }
+  .stores img { height:52px; width:auto; display:block; }
+  .stores.ios-first .s-ios { order:0; }
+  .stores.ios-first .s-play { order:1; }
+  .stores .s-other { opacity:0.72; }
+  .stores .s-other img { height:44px; }
   footer { margin-top:auto; padding-top:36px; font-size:12.5px; color:#8a9498; text-align:center; line-height:1.6; }
 
   /* ── events ── */
@@ -60,8 +74,14 @@
   <div class="tag">아이 소리에 귀 기울이는 육아일기 앱<br>엄마가 놓친 옹알이도, 앱이 듣고 남겨요</div>
 
   <div class="links">
-    <a class="btn primary" href="https://play.google.com/store/apps/details?id=io.solivie.speech&amp;hl=ko&amp;gl=KR">구글 플레이에서 무료로 받기</a>
-    <a class="btn primary" href="https://apps.apple.com/app/id6761690196">App Store에서 무료로 받기</a>
+    <div class="stores">
+      <a class="s-play" href="https://play.google.com/store/apps/details?id=io.solivie.speech&amp;hl=ko&amp;gl=KR" aria-label="Google Play에서 받기">
+        <img src="badges/play-ko.png" alt="Google Play에서 받기" width="646" height="192">
+      </a>
+      <a class="s-ios" href="https://apps.apple.com/app/id6761690196" aria-label="App Store에서 받기">
+        <img src="badges/apple-ko-kr.svg" alt="App Store에서 받기" width="130" height="40">
+      </a>
+    </div>
 
     <div class="section">진행 중인 이벤트</div>
     <div id="events"></div>
@@ -138,6 +158,22 @@ var EVENTS = [
     if (e.target === back) back.classList.remove("open");
   });
 })();
+</script>
+
+<script>
+  (function () {
+    var ua = navigator.userAgent;
+    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var isAndroid = /Android/i.test(ua);
+    var row = document.querySelector(".stores");
+    if (!row || (!isIOS && !isAndroid)) return;   // desktop keeps both equal
+    row.classList.toggle("ios-first", isIOS);
+    // De-emphasise the store this device cannot install from, without
+    // hiding it — a shared link still has to work on the other platform.
+    var other = row.querySelector(isIOS ? ".s-play" : ".s-ios");
+    if (other) other.classList.add("s-other");
+  })();
 </script>
 </body>
 </html>
