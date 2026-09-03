@@ -144,7 +144,15 @@ var EVENTS = [
         document.getElementById("modalTitle").textContent = ev.title;
         document.getElementById("modalDesc").textContent = ev.desc;
         document.getElementById("modalFine").textContent = ev.fine || "";
-        document.getElementById("modalCta").href = ev.link;
+        // The grant is server-side and identical on both platforms (iOS
+        // honors it since 1.2.0), so send iPhones to the App Store instead
+        // of the Play link this used to hardcode.
+        var ua = navigator.userAgent;
+        var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+        var cta = document.getElementById("modalCta");
+        cta.href = isIOS ? "https://apps.apple.com/app/id6761690196" : ev.link;
+        cta.textContent = isIOS ? "앱스토어에서 시작하기" : "구글 플레이에서 시작하기";
         back.classList.add("open");
       });
     }

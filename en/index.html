@@ -41,6 +41,31 @@
   .stores .s-other { opacity:0.72; }
   .stores .s-other img { height:44px; }
   footer { margin-top:auto; padding-top:36px; font-size:12.5px; color:#8a9498; text-align:center; line-height:1.6; }
+
+  /* ── events ── */
+  .event { display:flex; align-items:center; gap:14px; background:#FFFFFF;
+    border:1.5px solid rgba(229,112,80,0.12); border-radius:18px; padding:12px 14px;
+    cursor:pointer; transition:transform .1s; }
+  .event:active { transform:scale(0.98); }
+  .event img { width:64px; height:64px; border-radius:14px; object-fit:cover; flex:none; }
+  .event .etitle { font-size:15.5px; font-weight:700; line-height:1.35; }
+  .event .edate { font-size:12.5px; color:#8a9498; margin-top:3px; }
+  .event .ebadge { display:inline-block; font-size:11px; font-weight:700; color:#7A5FA8;
+    background:#E9DFF3; border-radius:999px; padding:2px 8px; margin-right:6px; }
+  .event.expired { filter:grayscale(1); opacity:0.5; pointer-events:none; }
+  .event.expired .ebadge { color:#8a9498; background:#ECECEC; }
+
+  /* ── modal ── */
+  #modalBack { position:fixed; inset:0; background:rgba(45,52,54,0.45);
+    display:none; align-items:flex-end; justify-content:center; z-index:10; }
+  #modalBack.open { display:flex; }
+  #modal { background:#FFFBF5; border-radius:24px 24px 0 0; padding:26px 24px 34px;
+    width:100%; max-width:480px; }
+  #modal h2 { font-size:20px; font-weight:800; }
+  #modal .mdesc { font-size:15px; line-height:1.6; color:#2D3436; margin-top:12px; white-space:pre-line; }
+  #modal .mfine { font-size:12.5px; color:#8a9498; margin-top:10px; }
+  #modal a.btn { margin-top:20px; }
+  #modalClose { float:right; border:none; background:none; font-size:22px; color:#8a9498; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -58,24 +83,108 @@
       </a>
     </div>
 
+    <div class="section">Current event</div>
+    <div id="events"></div>
+
     <div class="section">Instagram</div>
     <a class="btn secondary" href="https://www.instagram.com/babble.diary/">@babble.diary — Baby Talk &amp; Myths T/F</a>
   </div>
 
   <footer>Babble Diary · Solivie<br>Your baby's first sounds, kept for the family</footer>
 
+  <div id="modalBack">
+    <div id="modal">
+      <button id="modalClose" aria-label="Close">✕</button>
+      <h2 id="modalTitle"></h2>
+      <div class="mdesc" id="modalDesc"></div>
+      <div class="mfine" id="modalFine"></div>
+      <a class="btn primary" id="modalCta" href="#">Get started</a>
+    </div>
+  </div>
+
+<script>
+  // Platform detection shared by the store row and the event CTA: the grant
+  // is server-side and identical on both platforms, so the CTA should send
+  // the reader to the store they can actually install from.
+  var UA = navigator.userAgent;
+  var IS_IOS = /iPad|iPhone|iPod/.test(UA) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var IS_ANDROID = /Android/i.test(UA);
+  var STORE = {
+    play: "https://play.google.com/store/apps/details?id=io.solivie.speech&hl=en",
+    ios: "https://apps.apple.com/app/id6761690196"
+  };
+</script>
+
+<script>
+// Events: endDate "YYYY-MM-DD" (last valid day) auto-greys the row the day
+// after; endDate null = first-come event (badge text shows instead).
+var EVENTS = [
+  {
+    id: "founding100",
+    title: "First 100 families get lifetime premium 🎁",
+    badge: "First 100",
+    endDate: null,
+    thumb: "../events/founding100-en.jpg",
+    desc: "The first 100 families to join Babble Diary get premium for life. No form, no code — it's applied automatically in join order.\n\nLifetime premium includes\n📈 Growth charts for every range (1 month to all time)\n🎧 Replay past days' sound clips (free keeps today only)\n🔔 Growing-fast alerts\n💜 Every premium feature we add from here on",
+    fine: "First 100 families · applied in join order · non-transferable",
+    cta: { ios: "Get started on the App Store", play: "Get started on Google Play" }
+  }
+];
+
+(function () {
+  var wrap = document.getElementById("events");
+  var back = document.getElementById("modalBack");
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  EVENTS.forEach(function (ev) {
+    var expired = false;
+    var dateLabel = ev.badge || "";
+    if (ev.endDate) {
+      var end = new Date(ev.endDate + "T00:00:00");
+      expired = today > end;
+      var mmdd = (end.getMonth() + 1) + "/" + end.getDate();
+      dateLabel = expired ? "Ended" : "Until " + mmdd;
+    }
+    var row = document.createElement("div");
+    row.className = "event" + (expired ? " expired" : "");
+    row.innerHTML =
+      '<img src="' + ev.thumb + '" alt="">' +
+      '<div><div class="etitle">' + ev.title + "</div>" +
+      '<div class="edate"><span class="ebadge">' + dateLabel + "</span></div></div>";
+    if (!expired) {
+      row.addEventListener("click", function () {
+        var useIOS = IS_IOS;   // desktop and Android both go to Play
+        document.getElementById("modalTitle").textContent = ev.title;
+        document.getElementById("modalDesc").textContent = ev.desc;
+        document.getElementById("modalFine").textContent = ev.fine || "";
+        var cta = document.getElementById("modalCta");
+        cta.href = useIOS ? STORE.ios : STORE.play;
+        cta.textContent = useIOS ? ev.cta.ios : ev.cta.play;
+        back.classList.add("open");
+      });
+    }
+    wrap.appendChild(row);
+  });
+
+  document.getElementById("modalClose").addEventListener("click", function () {
+    back.classList.remove("open");
+  });
+  back.addEventListener("click", function (e) {
+    if (e.target === back) back.classList.remove("open");
+  });
+})();
+</script>
+
 <script>
   (function () {
-    var ua = navigator.userAgent;
-    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    var isAndroid = /Android/i.test(ua);
     var row = document.querySelector(".stores");
-    if (!row || (!isIOS && !isAndroid)) return;   // desktop keeps both equal
-    row.classList.toggle("ios-first", isIOS);
+    if (!row || (!IS_IOS && !IS_ANDROID)) return;   // desktop keeps both equal
+    row.classList.toggle("ios-first", IS_IOS);
     // De-emphasise the store this device cannot install from, without
     // hiding it — a shared link still has to work on the other platform.
-    var other = row.querySelector(isIOS ? ".s-play" : ".s-ios");
+    var other = row.querySelector(IS_IOS ? ".s-play" : ".s-ios");
     if (other) other.classList.add("s-other");
   })();
 </script>
